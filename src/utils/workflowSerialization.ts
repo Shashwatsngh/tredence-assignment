@@ -69,6 +69,14 @@ export const parseWorkflow = (raw: string): WorkflowSnapshot => {
     return candidate as WorkflowNode;
   });
 
+  const nodeIds = new Set<string>();
+  nodes.forEach((node) => {
+    if (nodeIds.has(node.id)) {
+      throw new Error(`Duplicate node id found: ${node.id}.`);
+    }
+    nodeIds.add(node.id);
+  });
+
   const edges = parsed.edges.map((edge, index) => {
     const candidate = edge as Partial<WorkflowEdge>;
 
@@ -85,6 +93,22 @@ export const parseWorkflow = (raw: string): WorkflowSnapshot => {
     }
 
     return candidate as WorkflowEdge;
+  });
+
+  const edgeIds = new Set<string>();
+  edges.forEach((edge) => {
+    if (edgeIds.has(edge.id)) {
+      throw new Error(`Duplicate edge id found: ${edge.id}.`);
+    }
+    edgeIds.add(edge.id);
+  });
+
+  edges.forEach((edge) => {
+    if (!nodeIds.has(edge.source) || !nodeIds.has(edge.target)) {
+      throw new Error(
+        `Edge ${edge.id} references missing nodes (${edge.source} -> ${edge.target}).`,
+      );
+    }
   });
 
   return {
