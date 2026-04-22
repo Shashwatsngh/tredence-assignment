@@ -18,7 +18,13 @@ interface NodeConfigPanelProps {
 }
 
 export function NodeConfigPanel({ onClearSelection }: NodeConfigPanelProps) {
-  const { selectedNode, automationOptions, updateNodeData } = useNodeConfig();
+  const {
+    selectedNode,
+    automationOptions,
+    isLoadingAutomations,
+    automationsError,
+    updateNodeData,
+  } = useNodeConfig();
 
   const saveNode = (nodeId: string, data: WorkflowNode["data"]) => {
     updateNodeData(nodeId, data);
@@ -39,8 +45,8 @@ export function NodeConfigPanel({ onClearSelection }: NodeConfigPanelProps) {
 
   return (
     <aside className="panel panel--config">
-      <div className="panel__section panel__section--header">
-        <div>
+      <div className="panel__section panel__section--header node-config-header">
+        <div className="node-config-header__meta">
           <div className="eyebrow">Selected node</div>
           <h2 className="panel__title panel__title--compact">
             {selectedNode.data.title}
@@ -75,11 +81,21 @@ export function NodeConfigPanel({ onClearSelection }: NodeConfigPanelProps) {
           />
         )}
         {isAutomatedNodeData(selectedNode.data) && (
-          <AutomatedNodeForm
-            value={selectedNode.data}
-            actions={automationOptions}
-            onSave={(data) => saveNode(selectedNode.id, data)}
-          />
+          <>
+            {isLoadingAutomations ? (
+              <div className="workflow-muted">Loading automation actions...</div>
+            ) : null}
+            {automationsError ? (
+              <div className="workflow-alert workflow-alert--error">
+                <div className="workflow-alert__error">{automationsError}</div>
+              </div>
+            ) : null}
+            <AutomatedNodeForm
+              value={selectedNode.data}
+              actions={automationOptions}
+              onSave={(data) => saveNode(selectedNode.id, data)}
+            />
+          </>
         )}
         {isEndNodeData(selectedNode.data) && (
           <EndNodeForm

@@ -8,6 +8,8 @@ import {
 } from "reactflow";
 import { create } from "zustand";
 import { isWorkflowNodeType } from "../types/workflow";
+import { autoLayoutNodes } from "../utils/autoLayout";
+import { isValidWorkflowConnection } from "../utils/workflowValidation";
 import type {
   WorkflowEdge,
   WorkflowNode,
@@ -39,6 +41,7 @@ interface WorkflowState {
   removeEdges: (edgeIds: string[]) => void;
   loadWorkflow: (workflow: WorkflowSnapshot) => void;
   exportWorkflow: () => WorkflowSnapshot;
+  autoLayout: () => void;
   undo: () => void;
   redo: () => void;
 }
@@ -194,6 +197,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
   onConnect: (connection) => {
     const nextState = get();
+    if (!isValidWorkflowConnection(connection, nextState.nodes, nextState.edges)) {
+      return;
+    }
+
     set({
       historyPast: pushHistory(nextState),
       historyFuture: [],
@@ -277,6 +284,14 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
   },
   exportWorkflow: () => createSnapshot(get()),
+  autoLayout: () => {
+    const nextState = get();
+    set({
+      historyPast: pushHistory(nextState),
+      historyFuture: [],
+      nodes: autoLayoutNodes(nextState.nodes, nextState.edges),
+    });
+  },
   undo: () => {
     const state = get();
     const previous = state.historyPast.at(-1);

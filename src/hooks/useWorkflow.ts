@@ -19,6 +19,7 @@ export const useWorkflow = () =>
       removeEdges: state.removeEdges,
       loadWorkflow: state.loadWorkflow,
       exportWorkflow: state.exportWorkflow,
+      autoLayout: state.autoLayout,
       undo: state.undo,
       redo: state.redo,
     })),

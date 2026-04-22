@@ -4,6 +4,7 @@ import type {
   WorkflowEdge,
   WorkflowNode,
 } from "../types/workflow";
+import type { Connection, Edge } from "reactflow";
 
 const hasConnection = (nodeId: string, edges: WorkflowEdge[]) =>
   edges.some((edge) => edge.source === nodeId || edge.target === nodeId);
@@ -55,6 +56,71 @@ const hasCycle = (nodes: WorkflowNode[], edges: WorkflowEdge[]) => {
   return nodes.some((node) => visit(node.id));
 };
 
+const getReachableNodeIds = (
+  startNodeId: string,
+  nodes: WorkflowNode[],
+  edges: WorkflowEdge[],
+) => {
+  const adjacency = buildAdjacency(nodes, edges);
+  const visited = new Set<string>();
+  const queue = [startNodeId];
+
+  while (queue.length > 0) {
+    const nodeId = queue.shift();
+    if (!nodeId || visited.has(nodeId)) {
+      continue;
+    }
+
+    visited.add(nodeId);
+    const neighbors = adjacency.get(nodeId) ?? [];
+    neighbors.forEach((neighbor) => {
+      if (!visited.has(neighbor)) {
+        queue.push(neighbor);
+      }
+    });
+  }
+
+  return visited;
+};
+
+export const isValidWorkflowConnection = (
+  connection: Connection | Edge,
+  nodes: WorkflowNode[],
+  edges: WorkflowEdge[],
+) => {
+  const { source, target } = connection;
+  if (!source || !target) {
+    return false;
+  }
+
+  if (source === target) {
+    return false;
+  }
+
+  const sourceNode = nodes.find((node) => node.id === source);
+  const targetNode = nodes.find((node) => node.id === target);
+  if (!sourceNode || !targetNode) {
+    return false;
+  }
+
+  if (sourceNode.type === "end") {
+    return false;
+  }
+
+  if (targetNode.type === "start") {
+    return false;
+  }
+
+  const alreadyExists = edges.some(
+    (edge) => edge.source === source && edge.target === target,
+  );
+  if (alreadyExists) {
+    return false;
+  }
+
+  return true;
+};
+
 export const validateWorkflow = (
   nodes: WorkflowNode[],
   edges: WorkflowEdge[],
@@ -82,6 +148,7 @@ export const validateWorkflow = (
   if (startNodes.length === 1) {
     const [startNode] = startNodes;
     const incoming = edges.filter((edge) => edge.target === startNode.id);
+    const outgoing = edges.filter((edge) => edge.source === startNode.id);
 
     if (incoming.length > 0) {
       issues.push({
@@ -92,6 +159,27 @@ export const validateWorkflow = (
           "Start node must be the first node and cannot have incoming connections.",
       });
     }
+
+    if (outgoing.length === 0) {
+      issues.push({
+        id: "start-has-no-outgoing",
+        nodeId: startNode.id,
+        severity: "warning",
+        message: "Start node should connect to at least one next step.",
+      });
+    }
+
+    const reachableFromStart = getReachableNodeIds(startNode.id, nodes, edges);
+    nodes.forEach((node) => {
+      if (!reachableFromStart.has(node.id)) {
+        issues.push({
+          id: `unreachable-${node.id}`,
+          nodeId: node.id,
+          severity: "warning",
+          message: "This node is unreachable from the Start node.",
+        });
+      }
+    });
   }
 
   if (endNodes.length === 0) {
@@ -109,6 +197,27 @@ export const validateWorkflow = (
         nodeId: node.id,
         severity: "warning",
         message: "This node is not connected to the workflow graph.",
+      });
+    }
+
+    const incomingCount = edges.filter((edge) => edge.target === node.id).length;
+    const outgoingCount = edges.filter((edge) => edge.source === node.id).length;
+
+    if (node.type !== "start" && incomingCount === 0) {
+      issues.push({
+        id: `missing-incoming-${node.id}`,
+        nodeId: node.id,
+        severity: "warning",
+        message: "Node has no incoming connection.",
+      });
+    }
+
+    if (node.type !== "end" && outgoingCount === 0) {
+      issues.push({
+        id: `missing-outgoing-${node.id}`,
+        nodeId: node.id,
+        severity: "warning",
+        message: "Node has no outgoing connection.",
       });
     }
   });

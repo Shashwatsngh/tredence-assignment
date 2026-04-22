@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import type { AutomationAction, AutomatedNodeData } from "../types/workflow";
 
 interface AutomatedNodeFormProps {
@@ -13,9 +13,9 @@ export function AutomatedNodeForm({
   actions,
   onSave,
 }: AutomatedNodeFormProps) {
-  const { register, handleSubmit, watch, reset, setValue } =
+  const { register, handleSubmit, reset, setValue, control } =
     useForm<AutomatedNodeData>({ defaultValues: value });
-  const actionId = watch("actionId");
+  const actionId = useWatch({ control, name: "actionId" });
 
   const actionParams = useMemo(
     () => actions.find((action) => action.id === actionId)?.params ?? [],

@@ -12,6 +12,7 @@ import {
   Background,
   BackgroundVariant,
   Controls,
+  type IsValidConnection,
   MiniMap,
   ReactFlow,
   ReactFlowProvider,
@@ -34,6 +35,7 @@ import {
   parseWorkflow,
 } from "../utils/workflowSerialization";
 import { sortIssues } from "../utils/workflowValidation";
+import { isValidWorkflowConnection } from "../utils/workflowValidation";
 import { NodeConfigPanel } from "./NodeConfigPanel";
 import { SimulationPanel } from "./SimulationPanel";
 import { Sidebar } from "./Sidebar";
@@ -72,6 +74,7 @@ export function WorkflowDesigner() {
     removeEdges,
     loadWorkflow,
     exportWorkflow,
+    autoLayout,
     undo,
     redo,
   } = useWorkflow();
@@ -211,6 +214,11 @@ export function WorkflowDesigner() {
       });
     },
     [removeEdges],
+  );
+
+  const isValidConnection: IsValidConnection = useCallback(
+    (connection) => isValidWorkflowConnection(connection, nodes, edges),
+    [edges, nodes],
   );
 
   const clearSelections = useCallback(() => {
@@ -375,7 +383,9 @@ export function WorkflowDesigner() {
       <div className="designer-shell">
         <header className="designer-header">
           <div className="designer-header__identity">
-            <div className="designer-brand">CodeAuto</div>
+            <div className="designer-brand" aria-hidden="true">
+              CA
+            </div>
             <div className="designer-header__meta">
               <div className="eyebrow">Workflow Studio</div>
               <div className="designer-header__title">User Automation</div>
@@ -397,6 +407,13 @@ export function WorkflowDesigner() {
               onClick={() => setShowInstructions(true)}
             >
               Help
+            </button>
+            <button
+              type="button"
+              className="workflow-secondary-button"
+              onClick={autoLayout}
+            >
+              Auto layout
             </button>
             <button
               type="button"
@@ -483,6 +500,7 @@ export function WorkflowDesigner() {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect as OnConnect}
+                isValidConnection={isValidConnection}
                 onNodeClick={(_, node) => {
                   setSelectedNodeId(node.id);
                   setSelectedEdgeId(null);

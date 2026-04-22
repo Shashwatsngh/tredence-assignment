@@ -88,6 +88,8 @@ html,
 body,
 #root {
   min-height: 100%;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -154,15 +156,17 @@ select {
 }
 
 .designer-brand {
-  width: 34px;
-  height: 34px;
+  width: 48px;
+  height: 48px;
   border-radius: 10px;
   display: grid;
   place-items: center;
-  font-size: 0.72rem;
+  font-size: 1rem;
   font-weight: 800;
   color: white;
   background: linear-gradient(140deg, #ff6b42, #ff8f42);
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
 }
 
 .designer-header__title {
@@ -186,7 +190,8 @@ select {
 }
 
 .designer-actions > button {
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
   max-width: 100%;
 }
 
@@ -223,6 +228,7 @@ select {
   backdrop-filter: blur(4px);
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
   overflow: hidden;
+  min-width: 0;
 }
 
 .panel__section {
@@ -289,6 +295,15 @@ select {
   gap: 12px;
 }
 
+.workflow-grid-2 > * {
+  min-width: 0;
+}
+
+.workflow-grid-2 .workflow-pill {
+  display: flex;
+  width: 100%;
+}
+
 .workflow-grid-2--compact {
   align-items: start;
 }
@@ -338,6 +353,7 @@ select {
   font-size: 0.9rem;
   line-height: 1.35;
   outline: none;
+  min-width: 0;
 }
 
 .workflow-input:focus {
@@ -432,7 +448,10 @@ select {
   background: var(--surface-soft);
   color: var(--text-muted);
   font-size: 0.84rem;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .workflow-drag-item {
@@ -497,6 +516,7 @@ select {
   color: var(--text-muted);
   line-height: 1.7;
   overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .panel--canvas {
@@ -777,6 +797,24 @@ select {
   min-width: 0;
 }
 
+.node-config-header {
+  align-items: center;
+}
+
+.node-config-header__meta {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.node-config-header .panel__title {
+  overflow-wrap: anywhere;
+}
+
+.node-config-header .workflow-icon-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .sidebar-nav-item:hover {
   background: var(--surface-soft);
   color: var(--text);
@@ -801,6 +839,11 @@ select {
   .designer-actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .designer-actions > button {
+    flex: 1 1 calc(33.333% - 8px);
+    min-width: 0;
   }
 
   .panel--canvas {
@@ -853,6 +896,46 @@ select {
   .canvas-shell {
     height: 560px;
   }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .shortcuts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .designer-brand {
+    width: 42px;
+    height: 42px;
+    font-size: 0.92rem;
+  }
+
+  .designer-actions > button {
+    flex: 1 1 100%;
+  }
+
+  .panel__section {
+    padding: 12px;
+  }
+
+  .workflow-grid-2 {
+    gap: 10px;
+  }
+
+  .workflow-pill {
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .modal-content {
+    width: calc(100vw - 16px);
+  }
 }
 
 .modal-backdrop {
@@ -871,6 +954,7 @@ select {
   border: 1px solid var(--panel-border);
   border-radius: 16px;
   max-width: 700px;
+  width: min(700px, calc(100vw - 24px));
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -981,6 +1065,7 @@ select {
   font-size: 0.82rem;
   color: var(--text-muted);
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .instructions-rules {
